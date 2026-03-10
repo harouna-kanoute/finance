@@ -14,26 +14,13 @@ period = st.sidebar.selectbox("Période", ["1mo", "6mo", "1y", "2y", "5y"])
 # --- Fonction de récupération ---
 @st.cache_data
 def get_comparison_data(ticker1, ticker2, period):
-    # On télécharge les données séparément pour mieux gérer les erreurs
     data1 = yf.download(ticker1, period=period)
     data2 = yf.download(ticker2, period=period)
     
-    # --- Vérification de sécurité ---
-    if data1.empty or data2.empty:
-        # Si l'un des deux est vide, on lève une erreur propre pour Streamlit
-        st.error(f"⚠️ Erreur : Impossible de trouver les données pour {ticker1} ou {ticker2}. Vérifiez les symboles.")
-        st.stop() # Arrête l'exécution de l'app ici proprement
-    
-    # On s'assure que ce sont bien des colonnes simples (évite les bugs MultiIndex)
-    d1 = data1['Close'].copy()
-    d2 = data2['Close'].copy()
-    
-    # Calcul du rendement cumulé
-    # On crée un nouveau DataFrame propre
-    result_df1 = (d1 / d1.iloc[0] - 1) * 100
-    result_df2 = (d2 / d2.iloc[0] - 1) * 100
-    
-    return result_df1, result_df2
+    # Calcul du rendement cumulé : (Prix / Premier Prix - 1) * 100
+    data1['Pct_Change'] = (data1['Close'] / data1['Close'].iloc[0] - 1) * 100
+    data2['Pct_Change'] = (data2['Close'] / data2['Close'].iloc[0] - 1) * 100
+    return data1, data2
 
 df1, df2 = get_comparison_data(main_ticker, comp_ticker, period)
 
@@ -103,3 +90,4 @@ if news:
 else:
 
     st.info("Aucune actualité récente trouvée.")
+
